@@ -1,23 +1,51 @@
 # RED Winter Online Test
 
-Placeholder deployment for `redwinter.online`, designed for Cloudflare Workers + Static Assets.
+Cloudflare Workers test deployment for RED Winter. GitHub is the source of truth; Cloudflare Workers serves the frontend and API from one application.
 
-## What is here
+## Project layout
 
-- `index.html` — lightweight mirror of the current RED Winter landing page structure.
-- `worker.js` — Cloudflare Worker with a demo `GET /api/demo` JSON endpoint.
-- `wrangler.toml` — Worker/static-assets configuration.
+- `public/` — static frontend assets.
+- `src/index.js` — Worker application code and API routes.
+- `wrangler.jsonc` — Cloudflare Workers + Static Assets configuration.
+- `package.json` — local development/deployment commands.
 
-## Local/deploy flow
+## Local development
 
-1. Install Wrangler: `npm install -g wrangler` (or use `npx wrangler`).
-2. Authenticate: `wrangler login`.
-3. Run locally: `wrangler dev`.
-4. Open the local URL and click **Call /api/demo**.
-5. Deploy: `wrangler deploy`.
-6. In Cloudflare, attach the intended custom domain/route to the Worker.
-7. If DNS remains registered/managed at GoDaddy, create the DNS record Cloudflare requires for that custom hostname. If you instead move authoritative DNS to Cloudflare, update the domain's nameservers at GoDaddy to the Cloudflare nameservers.
+```bash
+npm install
+npm run dev
+```
 
-## Notes
+Open the local URL shown by Wrangler. The landing page calls `GET /api/demo` on the same origin.
 
-The live site currently links to Discord, REDash, and GitHub. This placeholder intentionally uses a simple generated RED badge rather than copying remote image assets, so the test deployment has no dependency on the production site's image hosting.
+## Manual deployment
+
+```bash
+npm install
+npm run deploy
+```
+
+Wrangler will deploy both `public/` and `src/index.js` as one Worker application. The site can run entirely on the generated `workers.dev` hostname; no custom domain is required.
+
+## Automatic deployment from GitHub
+
+Cloudflare Workers Builds can deploy this repository automatically whenever `main` changes:
+
+1. In Cloudflare, open **Workers & Pages**.
+2. Choose **Create application** → **Import a repository**.
+3. Connect GitHub and select `Ryan-CS/Redwinter-online-test`.
+4. Use `main` as the production branch.
+5. Cloudflare should detect `wrangler.jsonc`; the deploy command is `npx wrangler deploy`.
+6. Save and deploy, then use the generated `*.workers.dev` URL.
+
+After Git integration is enabled, pushes to the configured production branch trigger new builds/deployments automatically.
+
+## Routing
+
+Static files are served directly from `public/`. Requests matching `/api/*` invoke the Worker first. The demo endpoint is:
+
+```text
+GET /api/demo
+```
+
+This keeps frontend and backend on the same origin, so the demo API does not need CORS configuration.
