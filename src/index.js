@@ -1,6 +1,8 @@
 const ALLOWED_ORIGINS = new Set([
   "https://www.redwinter.online",
   "https://redwinter.online",
+  "http://redwinter.online",
+  "http://www.redwinter.online",
   "https://ryan-cs.github.io",
 ]);
 
