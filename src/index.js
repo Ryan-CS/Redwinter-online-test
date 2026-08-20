@@ -1,6 +1,35 @@
+const ALLOWED_ORIGINS = new Set([
+  "https://www.redwinter.online",
+  "https://redwinter.online",
+  "https://ryan-cs.github.io",
+]);
+
+function corsHeaders(request) {
+  const origin = request.headers.get("Origin");
+  const headers = {
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Accept, Content-Type",
+    "Cache-Control": "no-store",
+    "Vary": "Origin",
+  };
+
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request) {
     const url = new URL(request.url);
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(request),
+      });
+    }
 
     if (url.pathname === "/api/demo") {
       if (request.method !== "GET") {
@@ -9,8 +38,8 @@ export default {
           {
             status: 405,
             headers: {
-              Allow: "GET",
-              "Cache-Control": "no-store",
+              ...corsHeaders(request),
+              Allow: "GET, OPTIONS",
             },
           },
         );
@@ -23,14 +52,13 @@ export default {
           message: "Hello from the RED Winter Cloudflare Worker API",
           timestamp: new Date().toISOString(),
         },
-        {
-          headers: {
-            "Cache-Control": "no-store",
-          },
-        },
+        { headers: corsHeaders(request) },
       );
     }
 
-    return env.ASSETS.fetch(request);
+    return Response.json(
+      { ok: false, error: "Not found" },
+      { status: 404, headers: corsHeaders(request) },
+    );
   },
 };

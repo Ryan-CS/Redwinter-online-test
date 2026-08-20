@@ -42,7 +42,7 @@
 
     <section class="api" aria-labelledby="api-heading">
       <p class="label" id="api-heading">Demo API</p>
-      <button id="api-button" type="button">Call /api/demo</button>
+      <button id="api-button" type="button">Call Worker API</button>
       <div id="api-result" role="status" aria-live="polite">Ready.</div>
     </section>
 
@@ -50,15 +50,16 @@
   </main>
 
   <script>
+    const API_BASE = "https://redwinter-online-test.ryan-skogstad.workers.dev";
     const button = document.getElementById("api-button");
     const result = document.getElementById("api-result");
 
     button.addEventListener("click", async () => {
       button.disabled = true;
-      result.textContent = "Calling demo API…";
+      result.textContent = "Calling Worker API…";
 
       try {
-        const response = await fetch("/api/demo", {
+        const response = await fetch(`${API_BASE}/api/demo`, {
           headers: { Accept: "application/json" },
         });
 
