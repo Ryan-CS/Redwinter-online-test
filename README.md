@@ -1,51 +1,60 @@
 # RED Winter Online Test
 
-Cloudflare Workers test deployment for RED Winter. GitHub is the source of truth; Cloudflare Workers serves the frontend and API from one application.
+Split test deployment for RED Winter:
+
+- GitHub Pages serves the static frontend from `public/`.
+- Cloudflare Workers serves the dynamic API from `src/index.js`.
+- The frontend calls the Worker at `https://redwinter-online-test.ryan-skogstad.workers.dev`.
 
 ## Project layout
 
-- `public/` — static frontend assets.
-- `src/index.js` — Worker application code and API routes.
-- `wrangler.jsonc` — Cloudflare Workers + Static Assets configuration.
-- `package.json` — local development/deployment commands.
+- `public/` — static frontend published by GitHub Pages.
+- `src/index.js` — Cloudflare Worker API.
+- `.github/workflows/pages.yml` — automatic GitHub Pages deployment from `main`.
+- `wrangler.jsonc` — API-only Worker configuration.
+- `package.json` — local Worker development/deployment commands.
 
-## Local development
+## Cloudflare Worker API
+
+Install dependencies and run locally:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the local URL shown by Wrangler. The landing page calls `GET /api/demo` on the same origin.
-
-## Manual deployment
+Deploy manually with:
 
 ```bash
-npm install
 npm run deploy
 ```
 
-Wrangler will deploy both `public/` and `src/index.js` as one Worker application. The site can run entirely on the generated `workers.dev` hostname; no custom domain is required.
+Cloudflare Git integration can also deploy the Worker automatically from `main` using `npx wrangler deploy`.
 
-## Automatic deployment from GitHub
-
-Cloudflare Workers Builds can deploy this repository automatically whenever `main` changes:
-
-1. In Cloudflare, open **Workers & Pages**.
-2. Choose **Create application** → **Import a repository**.
-3. Connect GitHub and select `Ryan-CS/Redwinter-online-test`.
-4. Use `main` as the production branch.
-5. Cloudflare should detect `wrangler.jsonc`; the deploy command is `npx wrangler deploy`.
-6. Save and deploy, then use the generated `*.workers.dev` URL.
-
-After Git integration is enabled, pushes to the configured production branch trigger new builds/deployments automatically.
-
-## Routing
-
-Static files are served directly from `public/`. Requests matching `/api/*` invoke the Worker first. The demo endpoint is:
+Current demo endpoint:
 
 ```text
-GET /api/demo
+GET https://redwinter-online-test.ryan-skogstad.workers.dev/api/demo
 ```
 
-This keeps frontend and backend on the same origin, so the demo API does not need CORS configuration.
+The Worker permits browser CORS requests from:
+
+- `https://www.redwinter.online`
+- `https://redwinter.online`
+- `https://ryan-cs.github.io`
+
+## GitHub Pages frontend
+
+The workflow in `.github/workflows/pages.yml` publishes the contents of `public/` whenever frontend files change on `main`.
+
+After merging this branch:
+
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+4. Run or wait for the **Deploy GitHub Pages** workflow.
+5. GitHub will publish the site on the repository's Pages URL.
+
+For a custom hostname, set `www.redwinter.online` as the GitHub Pages custom domain. GitHub will show the DNS target to use. In GoDaddy, add the `www` CNAME exactly as GitHub specifies, typically pointing to the account Pages hostname such as `ryan-cs.github.io`.
+
+Do not point `www` at the `workers.dev` hostname. The Worker is the API backend, not the static-site DNS target.
